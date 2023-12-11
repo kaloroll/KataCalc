@@ -4,18 +4,23 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"bufio"
+	"os"
 )
 
 var isRoman bool
 
 func main() {
-	expression := `\b(V?I{1,3}[VX]?|[VX]|[0-9]|10)\b\s?([-+*/])\s?\b(V?I{1,3}[VX]?|[VX]|[0-9]|10)`
-
+	reader := bufio.NewReader(os.Stdin)
+	expression := `^\b(V?I{1,3}[VX]?|[VX]I?|[0-9]|10)\b\s?([-+*/])\s?\b(V?I{1,3}[VX]?|[VX]I?|[0-9]|10)\s+$`
+	checkExpression := regexp.MustCompile(expression)
 	fmt.Println("Введите математическое выражение:")
-	var inputString string
-	fmt.Scanln(&inputString)
-
+	inputString, _ := reader.ReadString('\n')
 	match := regexp.MustCompile(expression).FindStringSubmatch(inputString)
+	if !checkExpression.MatchString(inputString){
+		fmt.Println("Ошибка! Введеная строка имеет не верный формат.")
+		return
+	}
 	operand1 := convertToNumber(match[1])
 	operand2 := convertToNumber(match[3])
 	_operator := match[2]
@@ -23,6 +28,10 @@ func main() {
 		fmt.Println("Ошибка! Выражение содержит числа разных форм. Я конечно могу их посчитать, но мне нельзя. :D")
 		return
 	}
+	if operand1 < 1 || operand2 < 1 || operand1 > 10 || operand2 > 10{		
+		fmt.Println("Ошибка! Программа может работать только с числами 1-10 или I-X")
+		return
+	}	
 	var result int
 	switch _operator {
 	case "/":
@@ -84,19 +93,19 @@ func containsRomanNumerals(operand string) bool {
 
 func arabicToRoman(arabicNum int) string {
 	romanNumerals := map[int]string{
-		1000: "M", 900: "CM", 500: "D", 400: "CD", 100: "C",
-		90: "XC", 50: "L", 40: "XL", 10: "X", 9: "IX",
-		5: "V", 4: "IV", 1: "I",
+		100: "C", 90: "XC", 50: "L", 40: "XL", 10: "X", 9: "IX", 5: "V", 4: "IV", 1: "I",
 	}
 
 	romanNumeral := ""
-
-	for num, numeral := range romanNumerals {
+	
+	nums := []int{100, 90, 50, 40, 10, 9, 5, 4, 1}
+	
+	for _, num := range nums {
+		numeral := romanNumerals[num]
 		for arabicNum >= num {
 			romanNumeral += numeral
 			arabicNum -= num
 		}
 	}
-
 	return romanNumeral
 }
